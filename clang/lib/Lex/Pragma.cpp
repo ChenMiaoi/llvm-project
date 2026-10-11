@@ -108,10 +108,11 @@ void PragmaNamespace::HandlePragma(Preprocessor &PP,
   PP.LexUnexpandedToken(Tok);
 
   // Get the handler for this token.  If there is no handler, ignore the pragma.
-  PragmaHandler *Handler
-    = FindHandler(Tok.getIdentifierInfo() ? Tok.getIdentifierInfo()->getName()
-                                          : StringRef(),
-                  /*IgnoreNull=*/false);
+  PragmaHandler *Handler = FindHandler(
+      Tok.is(tok::identifier) || tok::getKeywordSpelling(Tok.getKind())
+          ? Tok.getIdentifierInfo()->getName()
+          : StringRef(),
+      /*IgnoreNull=*/false);
   if (!Handler) {
     PP.Diag(Tok, diag::warn_pragma_ignored);
     return;
@@ -921,7 +922,7 @@ void Preprocessor::HandlePragmaSetPPState(PragmaIntroducer Introducer,
                                           Token &Tok) {
   // Lex the macro name we want to set.
   LexUnexpandedToken(Tok);
-  if (!Tok.getIdentifierInfo()) {
+  if (Tok.isNot(tok::identifier) && !tok::getKeywordSpelling(Tok.getKind())) {
     Diag(Tok.getLocation(), diag::err_pp_pragma_set_pp_state_expected_name);
     return;
   }
@@ -1149,7 +1150,10 @@ struct PragmaDebugHandler : public PragmaHandler {
     } else if (II->isStr("macro")) {
       Token MacroName;
       PP.LexUnexpandedToken(MacroName);
-      auto *MacroII = MacroName.getIdentifierInfo();
+      auto *MacroII = MacroName.is(tok::identifier) ||
+                              tok::getKeywordSpelling(MacroName.getKind())
+                          ? MacroName.getIdentifierInfo()
+                          : nullptr;
       if (MacroII)
         PP.dumpMacroInfo(MacroII);
       else
@@ -1174,7 +1178,10 @@ struct PragmaDebugHandler : public PragmaHandler {
     } else if (II->isStr("module_lookup")) {
       Token MName;
       PP.LexUnexpandedToken(MName);
-      auto *MNameII = MName.getIdentifierInfo();
+      auto *MNameII =
+          MName.is(tok::identifier) || tok::getKeywordSpelling(MName.getKind())
+              ? MName.getIdentifierInfo()
+              : nullptr;
       if (!MNameII) {
         PP.Diag(MName, diag::warn_pragma_debug_missing_argument)
             << II->getName();
@@ -1219,7 +1226,10 @@ struct PragmaDebugHandler : public PragmaHandler {
 
       Token Kind;
       PP.LexUnexpandedToken(Kind);
-      auto *DumpII = Kind.getIdentifierInfo();
+      auto *DumpII =
+          Kind.is(tok::identifier) || tok::getKeywordSpelling(Kind.getKind())
+              ? Kind.getIdentifierInfo()
+              : nullptr;
       if (!DumpII) {
         PP.Diag(Kind, diag::warn_pragma_debug_missing_argument)
             << II->getName();
@@ -1453,7 +1463,9 @@ struct PragmaWarningHandler : public PragmaHandler {
     }
 
     PP.Lex(Tok);
-    IdentifierInfo *II = Tok.getIdentifierInfo();
+    IdentifierInfo *II = Tok.isOneOf(tok::identifier, tok::kw_default)
+                             ? Tok.getIdentifierInfo()
+                             : nullptr;
 
     if (II && II->isStr("push")) {
       // #pragma warning( push[ ,n ] )
@@ -1484,7 +1496,9 @@ struct PragmaWarningHandler : public PragmaHandler {
       // #pragma warning( warning-specifier : warning-number-list
       //                  [; warning-specifier : warning-number-list...] )
       while (true) {
-        II = Tok.getIdentifierInfo();
+        II = Tok.isOneOf(tok::identifier, tok::kw_default)
+                 ? Tok.getIdentifierInfo()
+                 : nullptr;
         if (!II && !Tok.is(tok::numeric_constant)) {
           PP.Diag(Tok, diag::warn_pragma_warning_spec_invalid);
           return;
@@ -1601,7 +1615,8 @@ struct PragmaExecCharsetHandler : public PragmaHandler {
     }
 
     PP.Lex(Tok);
-    IdentifierInfo *II = Tok.getIdentifierInfo();
+    IdentifierInfo *II =
+        Tok.is(tok::identifier) ? Tok.getIdentifierInfo() : nullptr;
 
     if (II && II->isStr("push")) {
       // #pragma execution_character_set( push[ , string ] )
@@ -1930,7 +1945,8 @@ struct PragmaARCCFCodeAuditedHandler : public PragmaHandler {
 
     // Lex the 'begin' or 'end'.
     PP.LexUnexpandedToken(Tok);
-    const IdentifierInfo *BeginEnd = Tok.getIdentifierInfo();
+    const IdentifierInfo *BeginEnd =
+        Tok.is(tok::identifier) ? Tok.getIdentifierInfo() : nullptr;
     if (BeginEnd && BeginEnd->isStr("begin")) {
       IsBegin = true;
     } else if (BeginEnd && BeginEnd->isStr("end")) {
@@ -1985,7 +2001,8 @@ struct PragmaAssumeNonNullHandler : public PragmaHandler {
 
     // Lex the 'begin' or 'end'.
     PP.LexUnexpandedToken(Tok);
-    const IdentifierInfo *BeginEnd = Tok.getIdentifierInfo();
+    const IdentifierInfo *BeginEnd =
+        Tok.is(tok::identifier) ? Tok.getIdentifierInfo() : nullptr;
     if (BeginEnd && BeginEnd->isStr("begin")) {
       IsBegin = true;
     } else if (BeginEnd && BeginEnd->isStr("end")) {
