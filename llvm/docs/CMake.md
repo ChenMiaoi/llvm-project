@@ -1027,10 +1027,10 @@ sub-projects. Nearly all of these variable names begin with `LLVM_`.
 **LLVM_USE_LINKER**:STRING
 
 :   Add `-fuse-ld={name}` to the link invocation. The possible values depend on
-    your compiler. For clang, the value can be an absolute path to your custom
-    linker, otherwise clang will prefix the name with `ld.` and apply its usual
-    search. For example, to link LLVM with the Gold linker, cmake can be
-    invoked with `-DLLVM_USE_LINKER=gold`.
+    your compiler. Paths to linker executables use `--ld-path={path}` when
+    supported, falling back to `-fuse-ld={path}` otherwise. Relative paths,
+    such as `./ld.lld`, are resolved against the build directory. For example,
+    use `-DLLVM_USE_LINKER=gold` to link LLVM with GNU gold.
 
 **LLVM_USE_OPROFILE**:BOOL
 

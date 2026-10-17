@@ -436,17 +436,28 @@ if( LLVM_ENABLE_LLD )
 endif()
 
 if( LLVM_USE_LINKER )
+  # Sub-builds inherit LLVM_USE_LINKER, so preserve the meaning of relative paths
+  # when they are passed to a different build directory.
+  # Do not collapse '..': preceding directory symlinks affect its meaning.
+  if(NOT IS_ABSOLUTE "${LLVM_USE_LINKER}" AND LLVM_USE_LINKER MATCHES "[/\\\\]")
+    set(LLVM_USE_LINKER "${CMAKE_BINARY_DIR}/${LLVM_USE_LINKER}")
+  endif()
   check_cxx_source_compiles("int main() { return 0; }" _CAN_LINK_EXECUTABLE)
   mark_as_advanced(_CAN_LINK_EXECUTABLE)
-  append("-fuse-ld=${LLVM_USE_LINKER}"
+  include(GetLinkerFlag)
+  llvm_get_linker_flag(llvm_linker_flag)
+  append("\"${llvm_linker_flag}\""
     CMAKE_EXE_LINKER_FLAGS CMAKE_MODULE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS)
   if(_CAN_LINK_EXECUTABLE)
-    check_cxx_source_compiles("int main() { return 0; }" CXX_SUPPORTS_CUSTOM_LINKER)
-    if ( NOT CXX_SUPPORTS_CUSTOM_LINKER )
-      message(FATAL_ERROR "Host compiler does not support '-fuse-ld=${LLVM_USE_LINKER}'. "
+    # Recheck the selected linker when LLVM_USE_LINKER changes.
+    string(MD5 linker_flag_hash "${llvm_linker_flag}")
+    set(linker_test_var "CXX_SUPPORTS_CUSTOM_LINKER_${linker_flag_hash}")
+    check_cxx_source_compiles("int main() { return 0; }" ${linker_test_var})
+    if ( NOT ${linker_test_var} )
+      message(FATAL_ERROR "Host compiler does not support '${llvm_linker_flag}'. "
                           "Please make sure that '${LLVM_USE_LINKER}' is installed and "
                           "that your host compiler can compile a simple program when "
-                          "given the option '-fuse-ld=${LLVM_USE_LINKER}'.")
+                          "given the option '${llvm_linker_flag}'.")
     endif()
   else()
     message(STATUS "Skipping custom linker check: offload target cannot link executable")

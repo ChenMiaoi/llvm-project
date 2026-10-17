@@ -294,13 +294,16 @@ if (NOT DEFINED LLVM_LINKER_DETECTED AND NOT WIN32)
   endif()
 
   if(LLVM_USE_LINKER)
-    set(command ${CMAKE_C_COMPILER} -fuse-ld=${LLVM_USE_LINKER} ${version_flag} -o ${DEVNULL})
+    include(GetLinkerFlag)
+    llvm_get_linker_flag(llvm_linker_flag)
+    set(command ${CMAKE_C_COMPILER} "${llvm_linker_flag}" ${version_flag} -o ${DEVNULL})
   else()
     separate_arguments(flags UNIX_COMMAND "${CMAKE_EXE_LINKER_FLAGS}")
     set(command ${CMAKE_C_COMPILER} ${flags} ${version_flag} -o ${DEVNULL})
   endif()
   execute_process(
     COMMAND ${command}
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     OUTPUT_VARIABLE stdout
     ERROR_VARIABLE stderr
     )
