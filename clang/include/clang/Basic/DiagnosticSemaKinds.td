@@ -481,6 +481,9 @@ def note_riscv_repeated_interrupt_attribute : Note<
   "repeated RISC-V 'interrupt' attribute is here">;
 def warn_unused_parameter : Warning<"unused parameter %0">,
   InGroup<UnusedParameter>, DefaultIgnore;
+def warn_unused_virtual_parameter :
+  Warning<"unused parameter %0 in virtual function %q1">,
+  InGroup<UnusedVirtualParameter>, DefaultIgnore;
 def warn_unused_but_set_parameter : Warning<"parameter %0 set but not used">,
   InGroup<UnusedButSetParameter>, DefaultIgnore;
 def warn_unused_variable : Warning<"unused variable %0">,

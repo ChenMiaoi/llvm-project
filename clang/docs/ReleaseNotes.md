@@ -377,6 +377,12 @@ documentation](CIR/index.md) for more information regarding ClangIR's status and
 
 ### New Compiler Flags
 
+- Added `-Wunused-virtual-parameter` to control unused parameter
+  diagnostics in virtual member functions, including overrides.
+  It is enabled by `-Wunused-parameter`, whose default behavior is unchanged.
+  Implicit overrides not yet identifiable in dependent class templates
+  continue to use `-Wunused-parameter`.
+
 - Added `-fpch-base-dir-is-cwd` to serialize precompiled header input paths
   relative to the current working directory. Paths resolve against the
   consumer's working directory when loading the PCH, allowing a build tree

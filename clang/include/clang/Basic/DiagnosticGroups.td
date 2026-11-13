@@ -1261,7 +1261,9 @@ def UnusedMemberFunction : DiagGroup<"unused-member-function",
                                      [UnneededMemberFunction]>;
 def UnusedLabel : DiagGroup<"unused-label">;
 def UnusedLambdaCapture : DiagGroup<"unused-lambda-capture">;
-def UnusedParameter : DiagGroup<"unused-parameter">;
+def UnusedVirtualParameter : DiagGroup<"unused-virtual-parameter">;
+def UnusedParameter :
+  DiagGroup<"unused-parameter", [UnusedVirtualParameter]>;
 def UnusedButSetParameter : DiagGroup<"unused-but-set-parameter">;
 def UnusedResult : DiagGroup<"unused-result">;
 def PotentiallyEvaluatedExpression : DiagGroup<"potentially-evaluated-expression">;
