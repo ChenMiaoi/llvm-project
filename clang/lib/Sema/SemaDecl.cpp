@@ -16105,8 +16105,20 @@ void Sema::DiagnoseUnusedParameters(ArrayRef<ParmVarDecl *> Parameters) {
     if (!Parameter->isReferenced() && Parameter->getDeclName() &&
         !Parameter->hasAttr<UnusedAttr>() &&
         !Parameter->getIdentifier()->isPlaceholder()) {
-      Diag(Parameter->getLocation(), diag::warn_unused_parameter)
-        << Parameter->getDeclName();
+      const auto *Method = dyn_cast<CXXMethodDecl>(Parameter->getDeclContext());
+      if (Method)
+        Method = Method->getCanonicalDecl();
+      // Override and final specifiers identify virtual methods even before
+      // their dependent bases are resolved.
+      unsigned DiagID =
+          Method && (Method->isVirtual() || Method->hasAttr<OverrideAttr>() ||
+                     Method->hasAttr<FinalAttr>())
+              ? diag::warn_unused_virtual_parameter
+              : diag::warn_unused_parameter;
+      auto D = Diag(Parameter->getLocation(), DiagID);
+      D << Parameter->getDeclName();
+      if (DiagID == diag::warn_unused_virtual_parameter)
+        D << Method;
     }
   }
 }
