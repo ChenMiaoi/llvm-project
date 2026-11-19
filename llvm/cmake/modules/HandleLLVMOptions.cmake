@@ -844,6 +844,10 @@ if (LLVM_ENABLE_WARNINGS AND (LLVM_COMPILER_IS_GCC_COMPATIBLE OR CLANG_CL))
   endif()
 
   append("-Wextra -Wno-unused-parameter -Wwrite-strings" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+  # Temporarily expose unused virtual parameters on compilers that support
+  # the separate warning. Remove this override once unused parameter warnings
+  # are enabled globally.
+  add_flag_if_supported("-Wunused-virtual-parameter" UNUSED_VIRTUAL_PARAMETER_FLAG)
   append("-Wcast-qual" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
 
   # Turn off missing field initializer warnings for gcc to avoid noise from
